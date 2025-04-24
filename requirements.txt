@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+PyPDF2
+python-docx
+pydantic
+requests
+pymongo
+python-dotenv
+tzlocal==5.2
