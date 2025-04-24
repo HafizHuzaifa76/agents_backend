@@ -16,7 +16,7 @@ from typing import List, Optional, Dict
 import requests
 import csv
 from io import BytesIO
-from mongo import connect_to_database
+# from mongo import connect_to_database
 
 
 class CampaignDesignAgentInput(BaseModel):
@@ -108,14 +108,14 @@ def extract_campaign_elements(context: str) -> dict:
         }
     }
 
-def insert_brief(brief_data: dict):
-    client = connect_to_database()
-    db = client["test"]
-    collection = db["campaignBrief"]
+# def insert_brief(brief_data: dict):
+#     client = connect_to_database()
+#     db = client["test"]
+#     collection = db["campaignBrief"]
 
-    result = collection.insert_one(brief_data)
-    print(f"Document inserted with ID")
-    return f'new_brief_id : {str(result.inserted_id)}'
+#     result = collection.insert_one(brief_data)
+#     print(f"Document inserted with ID")
+#     return f'new_brief_id : {str(result.inserted_id)}'
 
 
 campaign_design_agent = Agent(
@@ -205,23 +205,10 @@ brief_agent = Agent(
 
         Do not make assumptions. Extract directly from provided documents. If anything is missing, ask the user for it.
         And give your response at once not in parts
-        and also insert brief in database using the tool and here is its format.
-        {
-            "brief_type": "...",
-            "design_aspects": "...",
-            "brand_tone": "...",
-            "brand_history": "...",
-            "brand_strategy": "...",
-            "strategic_fit": "...",
-            "campaign_goals": "...",
-            "campaign_objectives": "..."
-        }
-        When brief created the tool returns the id of newly created brief you have to show the new_brief_id also
-        Remember not only show json format on screen just show text on screen and json format for insert in database
 
         After completing the campaign brief, ask the user: "Would you like to initiate creator research now?"
     """,
-    tools=[insert_brief],
+    # tools=[insert_brief],
     output_key="campaign_brief"
 )
 
@@ -322,3 +309,19 @@ root_agent = Agent(
 #     instruction="First run the Campaign Design Agent to gather all required inputs, then pass the results to the Research Agent.",
 #     children=[campaign_design_agent, research_agent]
 # )
+
+
+
+        # and also insert brief in database using the tool and here is its format.
+        # {
+        #     "brief_type": "...",
+        #     "design_aspects": "...",
+        #     "brand_tone": "...",
+        #     "brand_history": "...",
+        #     "brand_strategy": "...",
+        #     "strategic_fit": "...",
+        #     "campaign_goals": "...",
+        #     "campaign_objectives": "..."
+        # }
+        # When brief created the tool returns the id of newly created brief you have to show the new_brief_id also
+        # Remember not only show json format on screen just show text on screen and json format for insert in database
