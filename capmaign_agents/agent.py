@@ -1,4 +1,5 @@
 from typing import Dict
+from capmaign_agents.mongo import connect_to_database
 from zoneinfo import ZoneInfo
 from PyPDF2 import PdfReader
 from docx import Document
@@ -16,7 +17,6 @@ from typing import List, Optional, Dict
 import requests
 import csv
 from io import BytesIO
-# from mongo import connect_to_database
 
 
 class CampaignDesignAgentInput(BaseModel):
@@ -108,14 +108,14 @@ def extract_campaign_elements(context: str) -> dict:
         }
     }
 
-# def insert_brief(brief_data: dict):
-#     client = connect_to_database()
-#     db = client["test"]
-#     collection = db["campaignBrief"]
+def insert_brief(brief_data: dict):
+    client = connect_to_database()
+    db = client["test"]
+    collection = db["campaignBrief"]
 
-#     result = collection.insert_one(brief_data)
-#     print(f"Document inserted with ID")
-#     return f'new_brief_id : {str(result.inserted_id)}'
+    result = collection.insert_one(brief_data)
+    print(f"Document inserted with ID")
+    return f'new_brief_id : {str(result.inserted_id)}'
 
 
 campaign_design_agent = Agent(
@@ -136,7 +136,8 @@ campaign_design_agent = Agent(
         - Timeline (start and end dates, phases if any)
         - Budget (total budget, allocation per channel if available)
 
-        When files are received start reviewing them automatically and giving show what information you get and what info you need more
+        When files are received dont start reviewing them automatically first ask if user want to upload more files if no then analyse files and show what information you get and what info you need more
+        It consistently shows the data it has gathered, as well as the information that is yet to be collected.
 
         After analyzing the documents, check if any of these required fields are missing or unclear.
         If any fields are missing, ask the user to provide that specific information.
@@ -160,16 +161,16 @@ research_agent = Agent(
     instruction="""
     You are the Research Agent. After receiving a campaign's goals, financial metrics, timeline, and budget, your role is to:
 
-    1. Conduct generative research to gather:
+    1. Conduct a generative web search to gather:
         - Historical Data relevant to the campaign type
         - Assumptions to support planning (e.g., platform trends, average CPMs)
         - Priorities to apply to both first-party and third-party data
 
-    2. Produce a Competitor Report that includes:
+    2. Produce a detailed Competitor Report(based on the data provided and not too long) that includes:
         - Campaigns Run by Competitors
         - What to Copy, What to Avoid
 
-    3. Formulate a campaign design statement like:
+    3. Formulate a campaign design statement(based on the data provided) like:
        "Working for McDonald's With $500 budget To see if we can get creators to promote their new sandwich."
 
     Be data-driven and strategic in your analysis. Your output should be clear, actionable, and formatted for campaign planning. Return your complete response all at once, not in parts.
@@ -227,6 +228,14 @@ creator_research_agent = Agent(
         2. **Evaluate Amount of Creators Needed**  
            Based on the campaign goals and budget, estimate the number of creators required to meet reach and engagement targets.
 
+        3. it also provides these data as a json like this
+        Data as JSON:
+        {
+            'Goals': [List<string> of Goals... with /n(new line) to seperate these],
+            'KPIs': [List<string> of KPIs... with /n(new line) to seperate these],
+            'Timeline': ["..."](just 1 string in list),
+            'Budget': ["..."](just 1 string in list)
+        }
         Output your full findings in structured text. Do not skip steps or return partial responses.
     """,
     output_key="creator_research"
@@ -234,10 +243,10 @@ creator_research_agent = Agent(
 
 root_agent = Agent(
     model="gemini-2.0-flash-exp",
-    name="campaign_flow_agent",
+    name="campaign_agent",
     description="Orchestrates the design, research, brief creation, and creator discovery process for a new campaign.",
     instruction="""
-        You are the campaign orchestrator.
+        You are the Campaign Orchestrator. Your job is to control the flow between agents — you do not generate responses yourself. Only the sub-agents should handle user interactions and generate outputs.
 
         Step 1: Run the `campaign_design_agent`. Guide the user to provide or upload necessary campaign inputs (Brand Guidelines, RFPs, Budget, Timeline, etc.). Validate all inputs.
 
@@ -255,6 +264,7 @@ root_agent = Agent(
             - Estimate how many creators are needed
 
         Only show final results from each step to the user, not intermediate data.
+        And Remember dont shift agents in the middle of response only 1 agent response at a time before moving to next you should ask user ...
     """,
     sub_agents=[campaign_design_agent, research_agent, brief_agent, creator_research_agent],
     output_key="root_agent"

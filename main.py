@@ -1,7 +1,6 @@
 import os
 import uvicorn
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from google.adk.cli.fast_api import get_fast_api_app
 
 # Path setup
@@ -24,7 +23,7 @@ async def health_check():
 @app.get("/agent-info")
 async def agent_info():
     try:
-        from sub_agents import root_agent
+        from capmaign_agents import root_agent
 
         return {
             "name": root_agent.name,
@@ -42,9 +41,7 @@ async def agent_info():
 
 
 if __name__ == "__main__":
-    # App Runner expects port 8080
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port, reload=False)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
 
 
 # http://0.0.0.0:9999/apps/sub_agents/users/user/sessions
