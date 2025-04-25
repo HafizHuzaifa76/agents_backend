@@ -1,0 +1,9 @@
+steps:
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['run', 'deploy', 'campaign-agents', 
+           '--source=.', 
+           '--region=us-central1', 
+           '--allow-unauthenticated', 
+           '--project=creator-engine']
+
+timeout: 900s
